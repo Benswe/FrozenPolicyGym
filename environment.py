@@ -16,11 +16,9 @@ class GridWorldEnv:
         self.states = list(range(self.n_rows * self.n_cols))
         self.actions = ["LEFT", "RIGHT", "UP", "DOWN"]
         self.start_state = self.find_start_state()
-        self.state = start_state
+        self.state = self.start_state
         self.gamma = gamma
         self.is_slippery = is_slippery
-        self.terminal_states = self.get_terminal_states()
-
         self.terminal_states = self.get_terminal_states()
     def state_to_pos(self, state):
         """
@@ -83,7 +81,7 @@ class GridWorldEnv:
         return state in self.terminal_states
     def reward(self, next_state):
         """
-        Return reward fo entering next_state
+        Return reward for entering next_state
 
         - Entering goal gives +1
         - Everything else gives 0
@@ -130,7 +128,7 @@ class GridWorldEnv:
             col -= 1
         # I need to clamp row and col so they stay inside of the grid
         row = max(0, min(row, self.n_rows - 1))
-        col = max(0, min(col, self.n_rows - 1))
+        col = max(0, min(col, self.n_cols - 1))
         next_state = self.pos_to_state(row, col)
         
         return next_state
@@ -170,12 +168,49 @@ class GridWorldEnv:
         slippery_actions = self.get_slippery_actions(action)
         transitions = []
         for action in slippery_actions:
-            transitions.append((0.33, action))
+            transitions.append((1/3, self.move(state, action)))
         return transitions
-    
+    def step(self, action):
+        """
+        Take one sampled step in the environment.
+
+        Return next_state, reward, done
+        
+        """
+        # quit if terminal
+        if self.is_terminal(self.state):
+            return self.state, 0, True
+        current_state = self.state
+        transitions = self.get_transitions(current_state, action) # returns [(prob, state)...]
+        # seperate probabilities and states
+        probablities = [t[0] for t in transitions]
+        states = [t[1] for t in transitions]
+        next_state= random.choices(states, probablities)[0] # Sample from probabilities
+        self.state = next_state
+        # get reward
+        r = self.reward(self.state)
+        done = self.is_terminal(self.state)
+        return self.state, r, done
+    def render(self):
+        """
+        Print the grid.
+        Shows agent as "A".
+        
+        Example:
+        A F F F
+        F H F H
+        F F F H
+        H F F G
         
         
-
-
-env = GridWorldEnv()
-print(env.get_transitions(4, "DOWN"))
+        """
+        for row in range(self.n_rows):
+            row_string = ""
+            for col in range(self.n_cols):
+                state = self.pos_to_state(row, col)
+                if state == self.state:
+                    row_string += "A "
+                else:
+                    tile = self.get_tile(state)
+                    row_string += tile + " "
+            print(row_string)

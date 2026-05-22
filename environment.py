@@ -1,7 +1,7 @@
 import random
 
 class GridWorldEnv:
-    def __init__(self, grid=None, start_state=0, gamma=0.99, is_slippery=True):
+    def __init__(self, grid=None, gamma=0.99, is_slippery=True):
         if grid is None:
             grid = [
                 "SFFF",
@@ -115,13 +115,10 @@ class GridWorldEnv:
         
         """
         row, col = self.state_to_pos(state)
-        # Up increases row
         if action == "UP":
             row -= 1
-        # Down decreases row
         elif action == "DOWN":
             row += 1
-        # Left increases column
         elif action == "RIGHT":
             col += 1
         elif action == "LEFT":
